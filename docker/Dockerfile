@@ -42,7 +42,6 @@ RUN cd ceres-solver-1.14.0 && mkdir ceres-bin && cd ceres-bin \
 
 # livox_ros_driver
 # not sure if necessary with RealSense LiDAR
-
 WORKDIR /opt/livox_build
 
 RUN wget -O livox.zip https://github.com/Livox-SDK/Livox-SDK/archive/refs/tags/v2.3.0.zip && unzip livox.zip
@@ -58,7 +57,7 @@ WORKDIR /opt/catkin_ws/src
 
 RUN cat /opt/livox_build/ws_livox/devel/setup.sh >> /opt/ros/noetic/setup.bash
 
-RUN    mv /usr/include/flann/ext/lz4.h /usr/include/flann/ext/lz4.h.bak \
+RUN mv /usr/include/flann/ext/lz4.h /usr/include/flann/ext/lz4.h.bak \
     && mv /usr/include/flann/ext/lz4hc.h /usr/include/flann/ext/lz4.h.bak \
     && ln -s /usr/include/lz4.h /usr/include/flann/ext/lz4.h \
     && ln -s /usr/include/lz4hc.h /usr/include/flann/ext/lz4hc.h
@@ -68,8 +67,6 @@ COPY . .
 RUN /bin/bash -c '. /opt/ros/noetic/setup.bash; cd ../ && catkin_make'
 
 ADD docker/ros-entrypoint.sh /ros-entrypoint.sh
-
-# COPY dataset /opt/catkin_ws/src/
 
 ENTRYPOINT [ "/ros-entrypoint.sh" ]
 
