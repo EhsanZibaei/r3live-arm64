@@ -3,17 +3,17 @@
 set -e
 
 SOURCE="${BASH_SOURCE[0]}"
-while [ -h "$SOURCE" ] ; do SOURCE="$(readlink "$SOURCE")"; done
-DOCKER_DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
-REPO_ROOT="$( cd -P "$( dirname "$DOCKER_DIR" )" && pwd )"
+while [ -h "$SOURCE" ]; do SOURCE="$(readlink "$SOURCE")"; done
+DOCKER_DIR="$(cd -P "$(dirname "$SOURCE")" && pwd)"
+REPO_ROOT="$(cd -P "$(dirname "$DOCKER_DIR")" && pwd)"
 
 DOCKER_VERSION=$(docker version -f "{{.Server.Version}}")
-DOCKER_MAJOR=$(echo "$DOCKER_VERSION"| cut -d'.' -f 1)
+DOCKER_MAJOR=$(echo "$DOCKER_VERSION" | cut -d'.' -f 1)
 
 if [ "${DOCKER_MAJOR}" -ge 19 ]; then
-    runtime="--gpus=all"
+  runtime="--gpus=all"
 else
-    runtime="--runtime=nvidia"
+  runtime="--runtime=nvidia"
 fi
 
 # no need to do `xhost +` anymore
@@ -27,16 +27,15 @@ IMAGE="r3live:latest"
 RUNTIME=$runtime
 
 docker run ${RUNTIME} --privileged -it --rm \
-	   -e NVIDIA_DRIVER_CAPABILITIES=compute,utility,graphics \
-            --volume=${REPO_ROOT}/:/opt/src/ \
-            --volume=$XSOCK:$XSOCK:rw \
-            --volume=$XAUTH:$XAUTH:rw \
-            --volume=/dev:/dev:rw \
-	    --device /dev/dri \
-            --net=host \
-	    --ipc=host \
-            --shm-size=1gb \
-            --env="XAUTHORITY=${XAUTH}" \
-            --env="DISPLAY=unix$DISPLAY" \
-            ${IMAGE}
-
+  -e NVIDIA_DRIVER_CAPABILITIES=compute,utility,graphics \
+  --volume=${REPO_ROOT}/:/opt/src/ \
+  --volume=$XSOCK:$XSOCK:rw \
+  --volume=$XAUTH:$XAUTH:rw \
+  --volume=/dev:/dev:rw \
+  --device /dev/dri \
+  --net=host \
+  --ipc=host \
+  --shm-size=1gb \
+  --env="XAUTHORITY=${XAUTH}" \
+  --env="DISPLAY=unix$DISPLAY" \
+  ${IMAGE}
