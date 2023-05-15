@@ -90,11 +90,11 @@ RUN mv /usr/include/flann/ext/lz4.h /usr/include/flann/ext/lz4.h.bak \
     && ln -s /usr/include/lz4.h /usr/include/flann/ext/lz4.h \
     && ln -s /usr/include/lz4hc.h /usr/include/flann/ext/lz4hc.h
 
+COPY . .
+
 RUN /bin/bash -c '. /opt/ros/noetic/setup.bash; cd ../ && catkin_make'
 
 ADD docker/ros-entrypoint.sh /ros-entrypoint.sh
-
-COPY . .
 
 ENTRYPOINT [ "/ros-entrypoint.sh" ]
 
