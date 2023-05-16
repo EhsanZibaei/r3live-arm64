@@ -4,33 +4,27 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections
 
 # install bootstrap tools
-RUN apt-get update && apt-get install --no-install-recommends -y \
+RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     python3-rosdep \
     python3-rosinstall \
     python3-vcstools \
     git ripgrep \
-    software-properties-common \
-    && rm -rf /var/lib/apt/lists/*
+    software-properties-common
 
 # bootstrap rosdep
 RUN rosdep init && \
   rosdep update --rosdistro $ROS_DISTRO
 
 # install ros packages
-RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+RUN apt-get install -y --no-install-recommends \
     ros-noetic-ros-base=1.5.0-1* \
-    && rm -rf /var/lib/apt/lists/*
+    ros-noetic-cv-bridge ros-noetic-tf ros-noetic-message-filters ros-noetic-image-transport ros-noetic-xacro \
+    ros-noetic-pcl-conversions ros-noetic-pcl-ros ros-noetic-perception ros-noetic-octomap-*  \
+    ros-noetic-robot-state-publisher ros-noetic-diagnostic-updater ros-noetic-rgbd-launch
 
-# r3live stuff
-RUN apt-get update && apt-get install -y \
-    ros-noetic-cv-bridge ros-noetic-tf ros-noetic-message-filters ros-noetic-image-transport \
-    ros-noetic-pcl-conversions ros-noetic-pcl-ros ros-noetic-perception ros-noetic-octomap-* ros-noetic-diagnostic-updater \
-    && rm -rf /var/lib/apt/lists/*
-
-
-# build tools and libraries
-RUN apt-get update && apt-get install -y \
+# install tools and libraries
+RUN apt-get install -y --no-install-recommends \
     libgoogle-glog-dev libatlas-base-dev libeigen3-dev cmake \
     curl wget vim build-essential unzip mesa-utils libgl1-mesa-glx \
     libcgal-dev pcl-tools \
@@ -60,7 +54,7 @@ RUN /bin/bash -c '. /opt/ros/noetic/setup.bash; cd ws_livox && catkin_make'
 # install librealsense2
 RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-key F6E65AC044F831AC80A06380C8B3A55A6F3EFCDE || sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-key F6E65AC044F831AC80A06380C8B3A55A6F3EFCDE \
     && add-apt-repository "deb https://librealsense.intel.com/Debian/apt-repo $(lsb_release -cs) main" -u \
-    && apt-get install --no-install-recommends -y librealsense2-dkms librealsense2-utils librealsense2-dev librealsense2-dbg ros-noetic-ddynamic-reconfigure librealsense2-udev-rules \
+    && apt-get update && apt-get install -y --no-install-recommends librealsense2-dkms librealsense2-utils librealsense2-dev librealsense2-dbg ros-noetic-ddynamic-reconfigure librealsense2-udev-rules \
     && rm -rf /var/lib/apt/lists/*
 
 # build and install realsense-ros
