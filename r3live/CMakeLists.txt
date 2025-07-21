@@ -3,7 +3,7 @@ project(r3live)
 
 set(CMAKE_BUILD_TYPE "Release")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
-set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -std=c++14 -O3 -lboost_system -msse2 -msse3 -pthread -Wenum-compare") # -Wall
+set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -std=c++14 -O3 -lboost_system -pthread -Wenum-compare") # -Wall
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
@@ -121,45 +121,3 @@ target_link_libraries(r3live_mapping
                           # ${OpenMVS_LIBRARIES}
                           pcl_common 
                           pcl_io) 
-
-FIND_PACKAGE(CGAL REQUIRED)
-if(CGAL_FOUND)
-	include_directories(${CGAL_INCLUDE_DIRS})
-	add_definitions(${CGAL_DEFINITIONS})
-	link_directories(${CGAL_LIBRARY_DIRS})
-  ADD_DEFINITIONS(-D_USE_BOOST -D_USE_EIGEN -D_USE_OPENMP)
-  SET(_USE_BOOST TRUE)
-  SET(_USE_OPENMP TRUE)
-  SET(_USE_EIGEN TRUE)
-  add_executable(r3live_meshing src/r3live_reconstruct_mesh.cpp                              
-                                src/rgb_map/image_frame.cpp
-                                src/rgb_map/pointcloud_rgbd.cpp  
-                                # Common
-                                src/meshing/MVS/Common/Common.cpp
-                                src/meshing/MVS/Common/Log.cpp
-                                src/meshing/MVS/Common/Timer.cpp
-                                src/meshing/MVS/Common/Types.cpp
-                                src/meshing/MVS/Common/Util.cpp
-                                # MVS                       
-                                src/meshing/MVS/Mesh.cpp
-                                src/meshing/MVS/PointCloud.cpp
-                                src/meshing/MVS/Camera.cpp
-                                src/meshing/MVS/Platform.cpp
-                                src/meshing/MVS/PLY.cpp
-                                src/meshing/MVS/OBJ.cpp
-                                src/meshing/MVS/IBFS.cpp
-                                )
-target_link_libraries(r3live_meshing 
-                                  ${catkin_LIBRARIES}
-                                  ${Boost_LIBRARIES}
-                                  ${Boost_FILESYSTEM_LIBRARY}
-                                  ${Boost_SERIALIZATION_LIBRARY} # serialization
-                                  ${CGAL_LIBS}
-                                  ${OpenCV_LIBRARIES}
-                                  ${JPEG_LIBRARIES} 
-                                  gmp
-                                  pcl_common 
-                                  pcl_io
-                                  pcl_kdtree)
-
-endif()
