@@ -42,10 +42,15 @@ RUN wget -O livox_ros_driver.zip https://github.com/Livox-SDK/livox_ros_driver/a
 
 RUN /bin/bash -c '. /opt/ros/noetic/setup.bash; cd ws_livox && catkin_make'
 
-
 # r3live build
+
+
 WORKDIR /opt/catkin_ws/src
 
-RUN cat /opt/livox_build/ws_livox/devel/setup.sh >> /opt/ros/noetic/setup.bash
+RUN git clone https://github.com/EhsanZibaei/r3live-arm64.git
 
-CMD ["bash"]
+WORKDIR /opt/catkin_ws
+
+RUN /bin/bash -c "source /opt/livox_build/ws_livox/devel/setup.bash && catkin_make"
+
+CMD ["/bin/bash", "-c", "source /opt/catkin_ws/devel/setup.bash && roslaunch r3live r3live_bag.launch"]
