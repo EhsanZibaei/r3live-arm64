@@ -53,4 +53,4 @@ WORKDIR /opt/catkin_ws
 
 RUN /bin/bash -c "source /opt/livox_build/ws_livox/devel/setup.bash && catkin_make"
 
-CMD ["/bin/bash", "-c", "source /opt/catkin_ws/devel/setup.bash && roslaunch r3live r3live_bag.launch"]
+# CMD ["/bin/bash", "-c", "source /opt/catkin_ws/devel/setup.bash && roslaunch r3live r3live_bag.launch"]
