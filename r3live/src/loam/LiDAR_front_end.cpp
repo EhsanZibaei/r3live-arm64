@@ -17,7 +17,8 @@ enum LID_TYPE
     MID,
     HORIZON,
     VELO16,
-    OUST64
+    OUST64,
+    BPEARL
 };
 
 enum Feature
@@ -82,6 +83,7 @@ void   mid_handler( const sensor_msgs::PointCloud2::ConstPtr &msg );
 void   horizon_handler( const livox_ros_driver::CustomMsg::ConstPtr &msg );
 void   velo16_handler( const sensor_msgs::PointCloud2::ConstPtr &msg );
 void   oust64_handler( const sensor_msgs::PointCloud2::ConstPtr &msg );
+void   bpearl_handler(const sensor_msgs::PointCloud2::ConstPtr &msg);
 void   give_feature( pcl::PointCloud< PointType > &pl, vector< orgtype > &types, pcl::PointCloud< PointType > &pl_corn,
                      pcl::PointCloud< PointType > &pl_surf );
 void   pub_func( pcl::PointCloud< PointType > &pl, ros::Publisher pub, const ros::Time &ct );
@@ -143,6 +145,11 @@ int main( int argc, char **argv )
     case OUST64:
         printf( "OUST64\n" );
         sub_points = n.subscribe( "/os_cloud_node/points", 1000, oust64_handler, ros::TransportHints().tcpNoDelay() );
+        break;
+
+    case BPEARL:
+        printf("BPEARL\n");
+        sub_points = n.subscribe("/rslidar_points", 1000, bpearl_handler, ros::TransportHints().tcpNoDelay());
         break;
 
     default:
@@ -380,6 +387,69 @@ void oust64_handler(const sensor_msgs::PointCloud2::ConstPtr &msg)
     pub_func( pl_processed, pub_corn, msg->header.stamp );
 }
 
+void bpearl_handler(const sensor_msgs::PointCloud2::ConstPtr &msg)
+{
+    pcl::PointCloud<PointType> pl_processed;
+    pcl::PointCloud<pcl::PointXYZI> pl_orig;
+    
+    pcl::fromROSMsg(*msg, pl_orig);
+    double time_stamp = msg->header.stamp.toSec();
+    
+    pl_processed.clear();
+    pl_processed.reserve(pl_orig.points.size());
+    
+    for (int i = 0; i < pl_orig.points.size(); i++)
+    {
+        double range = std::sqrt(pl_orig.points[i].x * pl_orig.points[i].x + 
+                                pl_orig.points[i].y * pl_orig.points[i].y +
+                                pl_orig.points[i].z * pl_orig.points[i].z);
+        
+        if (range < blind) {
+            continue;
+        }
+        
+        PointType added_pt;
+        added_pt.x = pl_orig.points[i].x;
+        added_pt.y = pl_orig.points[i].y;
+        added_pt.z = pl_orig.points[i].z;
+        added_pt.intensity = pl_orig.points[i].intensity;
+        added_pt.normal_x = 0;
+        added_pt.normal_y = 0;
+        added_pt.normal_z = 0;
+        added_pt.curvature = 0; // BPearl may not have timing info per point
+        
+        pl_processed.points.push_back(added_pt);
+    }
+    
+    pcl::PointCloud<PointType> pl_corn, pl_surf;
+    vector<orgtype> types;
+    
+    if (!g_if_using_raw_point) {
+        uint plsize = pl_processed.size() - 1;
+        types.resize(plsize + 1);
+        
+        for (uint i = 0; i < plsize; i++) {
+            types[i].range = sqrt(pl_processed[i].x * pl_processed[i].x + 
+                                 pl_processed[i].y * pl_processed[i].y +
+                                 pl_processed[i].z * pl_processed[i].z);
+            vx = pl_processed[i].x - pl_processed[i + 1].x;
+            vy = pl_processed[i].y - pl_processed[i + 1].y;
+            vz = pl_processed[i].z - pl_processed[i + 1].z;
+            types[i].dista = vx * vx + vy * vy + vz * vz;
+        }
+        types[plsize].range = sqrt(pl_processed[plsize].x * pl_processed[plsize].x + 
+                                  pl_processed[plsize].y * pl_processed[plsize].y +
+                                  pl_processed[plsize].z * pl_processed[plsize].z);
+        
+        give_feature(pl_processed, types, pl_corn, pl_surf);
+    } else {
+        pl_surf = pl_processed;
+    }
+    
+    pub_func(pl_processed, pub_full, msg->header.stamp);
+    pub_func(pl_surf, pub_surf, msg->header.stamp);
+    pub_func(pl_corn, pub_corn, msg->header.stamp);
+}
 
 void give_feature( pcl::PointCloud< PointType > &pl, vector< orgtype > &types, pcl::PointCloud< PointType > &pl_corn,
                    pcl::PointCloud< PointType > &pl_surf )
@@ -806,7 +876,7 @@ int plane_judge( const pcl::PointCloud< PointType > &pl, vector< orgtype > &type
         return 0;
     }
 
-    if ( lidar_type == MID || lidar_type == HORIZON )
+    if ( lidar_type == MID || lidar_type == HORIZON || lidar_type == BPEARL)
     {
         double dismax_mid = disarr[ 0 ] / disarr[ disarrsize / 2 ];
         double dismid_min = disarr[ disarrsize / 2 ] / disarr[ disarrsize - 2 ];
