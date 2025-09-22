@@ -1,3 +1,3 @@
-[submodule "modules/rslidar"]
-	path = modules/rslidar
-	url = git@github-rslidar:EhsanZibaei/rslidar_sdk.git
+[submodule "modules/src/rslidar"]
+    path = modules/src/rslidar
+    url = git@github-rslidar:EhsanZibaei/rslidar_sdk.git
